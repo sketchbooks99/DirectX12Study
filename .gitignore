@@ -1,0 +1,8 @@
+*/.vs/
+*/Debug/
+*/Release/
+*/packages/
+
+*.ipch
+*.sln
+*.vcxproj*
