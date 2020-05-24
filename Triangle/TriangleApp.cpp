@@ -8,7 +8,7 @@ void TriangleApp::Prepare() {
 		{ { -0.25f, -0.25f, 0.5f}, {0.0f, 0.0f, 1.0f, 1.0f}},
 	};
 	uint32_t indices[] = { 0, 1, 2 };
-
+	
 	// Create index buffer and vertex buffer.
 	m_vertexBuffer = CreateBuffer(sizeof(triangleVertices), triangleVertices);
 	m_indexBuffer = CreateBuffer(sizeof(indices), indices);
@@ -28,8 +28,9 @@ void TriangleApp::Prepare() {
 	hr = CompileShaderFromFile(L"VertexShader.hlsl", L"vs_6_0", m_vs, errBlob);
 	if (FAILED(hr)) {
 		OutputDebugStringA((const char*)errBlob->GetBufferPointer());
+		printf("hoge");
 	}
-	hr = CompileShaderFromFile(L"PixelShader.hlsl", L"vs_6_0", m_ps, errBlob);
+	hr = CompileShaderFromFile(L"PixelShader.hlsl", L"ps_6_0", m_ps, errBlob);
 	if (FAILED(hr)) {
 		OutputDebugStringA((const char*)errBlob->GetBufferPointer());
 	}

@@ -377,7 +377,7 @@ HRESULT D3D12AppBase::CompileShaderFromFile(
 	srcData.resize(uint32_t(infile.seekg(0, infile.end).tellg()));
 	infile.seekg(0, infile.beg).read(srcData.data(), srcData.size());
 
-	// DXC �ɂ��R���p�C������
+	// Compiling process by DXC (DirectX Shader Compiler). 
 	ComPtr<IDxcLibrary> library;
 	ComPtr<IDxcCompiler> compiler;
 	ComPtr<IDxcBlobEncoding> source;
@@ -391,13 +391,13 @@ HRESULT D3D12AppBase::CompileShaderFromFile(
 #if _DEBUG
 		L"/Zi", L"/O0",
 #else
-		L"/O2" // �����[�X�r���h�ł͍œK��
+		L"/O2" // Optimizing in Release Build. 
 #endif
 	};
 	compiler->Compile(source.Get(), filePath.wstring().c_str(),
 		L"main", profile.c_str(),
 		compilerFlags, _countof(compilerFlags),
-		nullptr, 0,
+		nullptr, 0, // Defines. 
 		nullptr,
 		&dxcResult);
 
