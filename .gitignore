@@ -2,7 +2,18 @@
 */Debug/
 */Release/
 */packages/
+*/x64/
 
 *.ipch
 *.sln
 *.vcxproj*
+*.exe
+*.ilk
+*.log
+*.pdb
+*.idb
+*.tlog
+*.lastbuildstate
+*.obj
+
+.gitignore
