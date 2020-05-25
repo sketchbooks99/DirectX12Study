@@ -7,7 +7,7 @@
 #endif
 #include <experimental/filesystem>
 
-// DirectX Shader Compiler �p
+// For DirectX Shader Compiler. 
 #include <dxcapi.h>
 #pragma comment(lib, "dxcompiler.lib")
 
@@ -30,7 +30,6 @@ void D3D12AppBase::Initialize(HWND hWnd) {
 	HRESULT hr;
 	UINT dxgiFlags = 0;
 
-	// �f�o�b�O���C���[��L���ɂ���
 #if defined(_DEBUG)
 	ComPtr<ID3D12Debug> debug;
 	if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&debug))))
@@ -38,7 +37,7 @@ void D3D12AppBase::Initialize(HWND hWnd) {
 		debug->EnableDebugLayer();
 		dxgiFlags |= DXGI_CREATE_FACTORY_DEBUG;
 
-#if 0 // GBV��L���ɂ���ꍇ (GPUBasedValidation) 
+#if 0 // In case of enable GBV.
 		ComPtr<ID3D12Debug3> debug3;
 		debug.As(&debug3);
 		if (debug3)
@@ -55,7 +54,7 @@ void D3D12AppBase::Initialize(HWND hWnd) {
 		throw std::runtime_error("CreateDXGIFactory2 failed.");
 	}
 
-	// �n�[�h�E�F�A�A�_�v�^�̌���
+	// Search hardware adapter. 
 	ComPtr<IDXGIAdapter1> useAdapter;
 	{
 		UINT adapterIndex = 0;
@@ -68,7 +67,7 @@ void D3D12AppBase::Initialize(HWND hWnd) {
 			if (desc1.Flags & DXGI_ADAPTER_FLAG_SOFTWARE)
 				continue;
 
-			// D3D12 �͎g�p�\��
+			// Whether can D3D12 use. 
 			hr = D3D12CreateDevice(
 				adapter.Get(),
 				D3D_FEATURE_LEVEL_11_0,
@@ -76,7 +75,7 @@ void D3D12AppBase::Initialize(HWND hWnd) {
 			if (SUCCEEDED(hr))
 				break;
 		}
-		adapter.As(&useAdapter); // �g�p����A�_�v�^�[
+		adapter.As(&useAdapter); // An adapter to use.
 	}
 
 	hr = D3D12CreateDevice(useAdapter.Get(), D3D_FEATURE_LEVEL_12_0, IID_PPV_ARGS(&m_device));
@@ -85,7 +84,7 @@ void D3D12AppBase::Initialize(HWND hWnd) {
 		throw new std::runtime_error("D3D12CreateDevice failed.");
 	}
 
-	// �R�}���h�L���[�̐���
+	// Create command queue.
 	D3D12_COMMAND_QUEUE_DESC queueDesc{
 		D3D12_COMMAND_LIST_TYPE_DIRECT,
 		0,
@@ -98,18 +97,17 @@ void D3D12AppBase::Initialize(HWND hWnd) {
 		throw std::runtime_error("CreateCommandQueue failed.");
 	}
 
-	// HWND ����N���C�A���g�̈�T�C�Y�𔻒肷��
-	// �i�E�B���h�E�T�C�Y��������Ă�����g�p����̂��ǂ��j
+	// Judge the crient area size from HWND.
 	RECT rect;
 	GetClientRect(hWnd, &rect);
 	int width = rect.right - rect.left;
 	int height = rect.bottom - rect.top;
 
-	// �X���b�v�`�F�C���̐���
+	// Create swap chain.
 	{
 		DXGI_SWAP_CHAIN_DESC1 scDesc{};
-		scDesc.BufferCount = FrameBufferCount; // �o�b�t�@�̐����w��
-		scDesc.Width = width;				   // �T�C�Y
+		scDesc.BufferCount = FrameBufferCount; 
+		scDesc.Width = width;				   
 		scDesc.Height = height;				
 		scDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 		scDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
@@ -133,19 +131,19 @@ void D3D12AppBase::Initialize(HWND hWnd) {
 		swapchain.As(&m_swapChain);
 	}
 
-	// �e�f�B�X�N���v�^�q�[�v�̏���
+	// Prepare each descriptor heap.
 	PrepareDescriptorHeaps();
-	// �����_�[�^�[�Q�b�g�r���[�̐���
+	// Create render target view.
 	PrepareRenderTargetView();
-	// �f�v�X�o�b�t�@�֘A�̏���
+	// Prepare depth buffer.
 	CreateDepthBuffer(width, height);
 
-	// �R�}���h�A���P�[�^�[�̏���
+	// Prepare the command allocator.
 	CreateCommandAllocators();
-	// �`��t���[�������p�̃t�F���X����
+	// Create fence for render frame Sync.
 	CreateFrameFences();
 
-	// �R�}���h���X�g�̐���
+	// Create command list.
 	hr = m_device->CreateCommandList(
 		0,
 		D3D12_COMMAND_LIST_TYPE_DIRECT,
@@ -176,7 +174,7 @@ void D3D12AppBase::Render()
 		nullptr
 	);
 
-	// �X���b�v�`�F�C���\���\���烌���_�[�^�[�Q�b�g�`��\��
+	// To enable render the render target from to enable display swap chain.
 	auto barrierToRT = CD3DX12_RESOURCE_BARRIER::Transition(
 		m_renderTargets[m_frameIndex].Get(),
 		D3D12_RESOURCE_STATE_PRESENT,
@@ -190,21 +188,21 @@ void D3D12AppBase::Render()
 		m_heapDsv->GetCPUDescriptorHandleForHeapStart()
 	);
 
-	// �J���[�o�b�t�@�i�����_�[�^�[�Q�b�g�r���[�j�̃N���A
-	const float clearColor[] = { 0.1f, 0.25f, 0.5f, 0.0f }; // �N���A�F
+	// Clear the color buffer.
+	const float clearColor[] = { 0.1f, 0.25f, 0.5f, 0.0f }; 
 	m_commandList->ClearRenderTargetView(rtv, clearColor, 0, nullptr);
 
-	// �f�v�X�o�b�t�@�i�f�v�X�X�e���V���r���[�j�̃N���A
+	// Clear the depth and stencil buffer.
 	m_commandList->ClearDepthStencilView(
 		dsv, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr
 	);
 
-	// �`�����Z�b�g
+	// Set the output to render.
 	m_commandList->OMSetRenderTargets(1, &rtv, FALSE, &dsv);
 
 	MakeCommand(m_commandList);
 
-	// �����_�[�^�[�Q�b�g����X���b�v�`�F�C���\���\��
+	// To enable to display swapchain from render target.
 	auto barrierToPresent = CD3DX12_RESOURCE_BARRIER::Transition(
 		m_renderTargets[m_frameIndex].Get(),
 		D3D12_RESOURCE_STATE_RENDER_TARGET,
@@ -224,7 +222,7 @@ void D3D12AppBase::Render()
 
 void D3D12AppBase::PrepareDescriptorHeaps()
 {
-	// RTV�̃f�B�X�N���v�^�q�[�v
+	// Descriptor heap of RTV.
 	HRESULT hr;
 	D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc{
 		D3D12_DESCRIPTOR_HEAP_TYPE_RTV,
@@ -239,7 +237,7 @@ void D3D12AppBase::PrepareDescriptorHeaps()
 	}
 	m_rtvDescriptorSize = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
-	// DSV�̃f�B�X�N���v�^�q�[�v
+	// Descriptor heap of DSV.
 	D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc{
 		D3D12_DESCRIPTOR_HEAP_TYPE_DSV,
 		1,
@@ -255,20 +253,20 @@ void D3D12AppBase::PrepareDescriptorHeaps()
 
 void D3D12AppBase::PrepareRenderTargetView()
 {
-	// �X���b�v�`�F�C���C���[�W�ւ̃����_�[�^�[�Q�b�g�r���[����
+	// Create render target view to swapchain image.
 	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(
 		m_heapRtv->GetCPUDescriptorHandleForHeapStart());
 	for (UINT i = 0; i < FrameBufferCount; i++) {
 		m_swapChain->GetBuffer(i, IID_PPV_ARGS(&m_renderTargets[i]));
 		m_device->CreateRenderTargetView(m_renderTargets[i].Get(), nullptr, rtvHandle);
-		// �Q�Ƃ���f�B�X�N���v�^�̕ύX
+		// Change descriptor to reference.
 		rtvHandle.Offset(1, m_rtvDescriptorSize);
 	}
 }
 
 void D3D12AppBase::CreateDepthBuffer(int width, int height)
 {
-	// �f�v�X�o�b�t�@�̐���
+	// Create depth buffer.
 	auto depthBufferDesc = CD3DX12_RESOURCE_DESC::Tex2D(
 		DXGI_FORMAT_D32_FLOAT,
 		width,
@@ -296,7 +294,7 @@ void D3D12AppBase::CreateDepthBuffer(int width, int height)
 		throw std::runtime_error("Failed CreateCommittedResource(DepthBuffer)");
 	}
 
-	// �f�v�X�X�e���V���r���[����
+	// Create depth stencil view.
 	D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc
 	{
 		DXGI_FORMAT_D32_FLOAT,
@@ -332,7 +330,7 @@ void D3D12AppBase::CreateFrameFences()
 	m_frameFences.resize(FrameBufferCount);
 	for (UINT i = 0; i < FrameBufferCount; i++) {
 		hr = m_device->CreateFence(
-			0, // �����l
+			0, // Initialize value.
 			D3D12_FENCE_FLAG_NONE,
 			IID_PPV_ARGS(&m_frameFences[i])
 		);
@@ -345,19 +343,19 @@ void D3D12AppBase::CreateFrameFences()
 
 void D3D12AppBase::WaitPreviousFrame()
 {
-	// ���݂̃t�F���X�� GPU �����B��ݒ肳���l���Z�b�g
+	// Set a value that set when GPU arrived to current fence.
 	auto& fence = m_frameFences[m_frameIndex];
 	const auto currentValue = ++m_frameFenceValues[m_frameIndex];
 	m_commandQueue->Signal(fence.Get(), currentValue);
 
-	// ����������R�}���h�i�A���P�[�^�[�j�̂��͎̂��s�����ς݂����A
-	// �΂ɂȂ��Ă���t�F���X�Ŋm�F����
+	// The next command or allocators are checked by a pair of fences 
+	// to make sure it has been executed.
 	auto nextIndex = (m_frameIndex + 1) % FrameBufferCount;
 	const auto finishExpected = m_frameFenceValues[nextIndex];
 	const auto nextFenceValue = m_frameFences[nextIndex]->GetCompletedValue();
 	if (nextFenceValue < finishExpected)
 	{
-		// GPU���������̂��߂ɁA�C�x���g�őҋ@����
+		// Since GPU is in processing, wait in Event.
 		m_frameFences[nextIndex]->SetEventOnCompletion(finishExpected, m_fenceWaitEvent);
 		WaitForSingleObject(m_fenceWaitEvent, GpuWaitTimeout);
 	}

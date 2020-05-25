@@ -1,12 +1,19 @@
 #pragma once
 
-#include <DirectXMath.h>
+#include <iostream>
+#include <sstream>
+#include <string>
+#include <vector>
 
-// Vector
-using Vector2 = DirectX::XMFLOAT2;
-using Vector3 = DirectX::XMFLOAT3;
-using Vector4 = DirectX::XMFLOAT4;
-
-// Matrices
-using Matrix3x3 = DirectX::XMFLOAT3X3;
-using Matrix4x4 = DirectX::XMFLOAT4X4;
+std::vector<std::wstring> split(const std::wstring &name, wchar_t delimiter) {
+    std::vector<std::wstring> elements;
+    std::wstringstream wss(name);
+    std::wstring item;
+    while(getline(wss, item, delimiter))
+    {
+        if(!item.empty()) {
+            elements.push_back(item);
+        }
+    }
+    return elements;
+}

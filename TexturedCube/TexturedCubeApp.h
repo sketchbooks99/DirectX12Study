@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../util/D3D12AppBase.h"
-#include "../util/util.h"
+#include "../util/mathutil.h"
 
 class TexturedCubeApp : public D3D12AppBase {
 public:
@@ -35,7 +35,8 @@ public:
 private:
     ComPtr<ID3D12Resource1> CreateBuffer(UINT bufferSize, const void* initialData);
     ComPtr<ID3D12Resource1> CreateTexture(const std::string& fileName);
-    void PrepareDescriptorHeapForCubeApp();
+    //ComPtr<ID3D12Resource> DXCreateTexture(const std::wstring& fileName);
+    void PrepareDescriptorHeapForTexturedCubeApp();
 
     ComPtr<ID3D12DescriptorHeap> m_heapSrvCbv;
     ComPtr<ID3D12DescriptorHeap> m_heapSampler;
@@ -43,7 +44,7 @@ private:
 
     ComPtr<ID3D12Resource1> m_vertexBuffer;
     ComPtr<ID3D12Resource1> m_indexBuffer;
-    ComPtr<ID3D12Resource1> m_texture; 
+    ComPtr<ID3D12Resource> m_texture; 
     D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView;
     D3D12_INDEX_BUFFER_VIEW m_indexBufferView;
     UINT m_indexCount;

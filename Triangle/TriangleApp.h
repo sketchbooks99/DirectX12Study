@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../util/D3D12AppBase.h"
-#include "../util/util.h"
+#include "../util/mathutil.h"
 
 class TriangleApp : public D3D12AppBase {
 public:
