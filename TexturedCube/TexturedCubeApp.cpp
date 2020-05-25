@@ -1,11 +1,16 @@
 #include <stdexcept>
 #include "TexturedCubeApp.h"
-#include <DirectXTex.h>
+#include <DirectXTex/DirectXTex.h>
+#pragma comment(lib, "DirectXTex.lib")
+
+#include "WICTextureLoader12.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "../util/stb_image.h"
 
 #include "../util/util.h"
+
+
 
 void TexturedCubeApp::Prepare() {
     const float k = 1.0f;
@@ -177,8 +182,8 @@ void TexturedCubeApp::Prepare() {
     }
 
     // Create texture.
-    //m_texture = CreateTexture("normal.png");
-    m_texture = CreateTexture("texture.tga");
+    m_texture = DXCreateTexture(L"normal.png");
+    //m_texture = CreateTexture("texture.tga");
 
     // Create sampler.
     D3D12_SAMPLER_DESC samplerDesc{};
@@ -202,11 +207,13 @@ void TexturedCubeApp::Prepare() {
     // Prepare shader resource view from texture.
     auto srvHandle = CD3DX12_CPU_DESCRIPTOR_HANDLE(m_heapSrvCbv->GetCPUDescriptorHandleForHeapStart(), TextureSrvDescriptorBase, m_srvcbvDescriptorSize);
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
+    D3D12_RESOURCE_DESC textureDesc = m_texture->GetDesc();
     srvDesc.Texture2D.MipLevels = 1;
-    srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    srvDesc.Format = textureDesc.Format;
     srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
     srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-    m_device->CreateShaderResourceView(m_texture.Get(), &srvDesc, srvHandle);
+    m_device->CreateShaderResourceView(m_texture.Get(), &srvDesc, 
+        m_heapSrvCbv->GetCPUDescriptorHandleForHeapStart());
     m_srv = CD3DX12_GPU_DESCRIPTOR_HANDLE(m_heapSrvCbv->GetGPUDescriptorHandleForHeapStart(), TextureSrvDescriptorBase, m_srvcbvDescriptorSize);
 }
 
@@ -298,6 +305,64 @@ TexturedCubeApp::ComPtr<ID3D12Resource1> TexturedCubeApp::CreateBuffer(UINT buff
     }
 
     return buffer;
+}
+
+TexturedCubeApp::ComPtr<ID3D12Resource> TexturedCubeApp::DXCreateTexture(const std::wstring& fileName)
+{
+    HRESULT hr;
+    hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
+    if (FAILED(hr))
+        throw std::runtime_error("Faileed CoInitlializeEx.");
+    
+    ComPtr<ID3D12Resource> textureUploadHeap;
+    ComPtr<ID3D12Resource> texture;
+
+    // Create texture from WIC.
+    {
+        std::unique_ptr<uint8_t[]> wicData;
+        D3D12_SUBRESOURCE_DATA subresourceData;
+        hr = DirectX::LoadWICTextureFromFile(m_device.Get(),
+            fileName.c_str(),
+            &texture,
+            wicData,
+            subresourceData);
+        if (FAILED(hr))
+            throw std::runtime_error("Failed LoadWICTextureFromFile.");
+
+        const UINT64 uploadBufferSize = GetRequiredIntermediateSize(texture.Get(), 0, 1);
+
+        // Create the GPU upload buffer.
+        hr = m_device->CreateCommittedResource(
+            &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
+            D3D12_HEAP_FLAG_NONE,
+            &CD3DX12_RESOURCE_DESC::Buffer(uploadBufferSize),
+            D3D12_RESOURCE_STATE_GENERIC_READ,
+            nullptr,
+            IID_PPV_ARGS(&textureUploadHeap)
+        );
+        if (FAILED(hr))
+            throw std::runtime_error("Failed CreateCommittedResource.");
+
+        
+        
+        UpdateSubresources(m_commandList.Get(),
+            texture.Get(),
+            textureUploadHeap.Get(),
+            0,
+            0,
+            1,
+            &subresourceData);
+        // Finally, set the resource barrier.
+        auto barrierTex = CD3DX12_RESOURCE_BARRIER::Transition(
+            texture.Get(),
+            D3D12_RESOURCE_STATE_COPY_DEST,
+            D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
+        );
+
+        m_commandList->ResourceBarrier(1, &barrierTex);
+        m_commandList->Close();
+    }
+    return texture;
 }
 
 //TexturedCubeApp::ComPtr<ID3D12Resource> TexturedCubeApp::DXCreateTexture(const std::wstring& fileName)

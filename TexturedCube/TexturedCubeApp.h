@@ -35,7 +35,7 @@ public:
 private:
     ComPtr<ID3D12Resource1> CreateBuffer(UINT bufferSize, const void* initialData);
     ComPtr<ID3D12Resource1> CreateTexture(const std::string& fileName);
-    //ComPtr<ID3D12Resource> DXCreateTexture(const std::wstring& fileName);
+    ComPtr<ID3D12Resource> DXCreateTexture(const std::wstring& fileName);
     void PrepareDescriptorHeapForTexturedCubeApp();
 
     ComPtr<ID3D12DescriptorHeap> m_heapSrvCbv;
