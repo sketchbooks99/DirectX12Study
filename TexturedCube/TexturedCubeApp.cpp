@@ -187,17 +187,20 @@ void TexturedCubeApp::Prepare() {
 
     // Create sampler.
     D3D12_SAMPLER_DESC samplerDesc{};
-    samplerDesc.Filter = D3D12_ENCODE_BASIC_FILTER(
-        D3D12_FILTER_TYPE_LINEAR, // min
-        D3D12_FILTER_TYPE_LINEAR, // mag
-        D3D12_FILTER_TYPE_LINEAR, // mip
-        D3D12_FILTER_REDUCTION_TYPE_STANDARD);
+    //samplerDesc.Filter = D3D12_ENCODE_BASIC_FILTER(
+    //    D3D12_FILTER_TYPE_LINEAR, // min
+    //    D3D12_FILTER_TYPE_LINEAR, // mag
+    //    D3D12_FILTER_TYPE_LINEAR, // mip
+    //    D3D12_FILTER_REDUCTION_TYPE_STANDARD);
+    samplerDesc.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
     samplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
     samplerDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
     samplerDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
     samplerDesc.MaxLOD = FLT_MAX;
     samplerDesc.MinLOD = -FLT_MAX;
     samplerDesc.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
+    samplerDesc.MipLODBias = 0.0f;
+    samplerDesc.MaxAnisotropy = 0;
 
     // Use 0 index of descriptor heap for sampler.
     auto descriptorSampler = CD3DX12_CPU_DESCRIPTOR_HANDLE(m_heapSampler->GetCPUDescriptorHandleForHeapStart(), SamplerDescriptorBase, m_samplerDescriptorSize);
@@ -209,8 +212,13 @@ void TexturedCubeApp::Prepare() {
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
     D3D12_RESOURCE_DESC textureDesc = m_texture->GetDesc();
     srvDesc.Texture2D.MipLevels = 1;
-    srvDesc.Format = textureDesc.Format;
+    //srvDesc.Format = textureDesc.Format;
+    srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
     srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+    srvDesc.Texture2D.MipLevels = 1;
+    srvDesc.Texture2D.MostDetailedMip = 0;
+    srvDesc.Texture2D.PlaneSlice = 0;
+    srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
     srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
     m_device->CreateShaderResourceView(m_texture.Get(), &srvDesc, 
         m_heapSrvCbv->GetCPUDescriptorHandleForHeapStart());
@@ -343,8 +351,6 @@ TexturedCubeApp::ComPtr<ID3D12Resource> TexturedCubeApp::DXCreateTexture(const s
         if (FAILED(hr))
             throw std::runtime_error("Failed CreateCommittedResource.");
 
-        
-        
         UpdateSubresources(m_commandList.Get(),
             texture.Get(),
             textureUploadHeap.Get(),

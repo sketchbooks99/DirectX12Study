@@ -1,10 +1,14 @@
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
+#ifdef _DEBUG
+#include <iostream>
+#endif
 #include "TexturedCubeApp.h"
 #include <stdexcept>
 
 const int WINDOW_WIDTH = 640;
 const int WINDOW_HEIGHT = 480;
+
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 {
@@ -40,8 +44,28 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 	return DefWindowProc(hWnd, msg, wp, lp);
 }
 
+void DispConsole() {
+	// Create the console window.
+	AllocConsole();
+	FILE *fp = NULL;
+	freopen_s(&fp, "CONOUT$", "w", stdout);
+	freopen_s(&fp, "CONIN$", "r", stdin);
+}
+
+void DebugOutputFormatString(const char* format)
+{
+#ifdef _DEBUG
+	va_list valist;
+	va_start(valist, format);
+	printf(format, valist);
+	va_end(valist);
+#endif
+}
+
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow) {
 	TexturedCubeApp theApp{};
+
+	DispConsole();
 
 	WNDCLASSEX wc{};
 	wc.cbSize = sizeof(wc);
