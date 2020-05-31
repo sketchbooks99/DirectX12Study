@@ -156,7 +156,7 @@ void D3D12AppBase::Initialize(HWND hWnd) {
 	m_viewport = CD3DX12_VIEWPORT(0.0f, 0.0f, float(width), float(height));
 	m_scissorRect = CD3DX12_RECT(0, 0, LONG(width), LONG(height));
 
-	Prepare();
+	Setup();
 }
 
 void D3D12AppBase::Terminate()
@@ -264,6 +264,37 @@ void D3D12AppBase::PrepareRenderTargetView()
 	}
 }
 
+// ===============================================================================================
+ComPtr<ID3D12Resource> D3D12AppBase::CreateBuffer(UINT bufferSize, const void* initialData)
+{
+	HRESULT hr;
+	ComPtr<ID3D12Resource> buffer;
+	hr = m_device->CreateCommittedResource(
+		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
+		D3D12_HEAP_FLAG_NONE,
+		&CD3DX12_RESOURCE_DESC::Buffer(bufferSize),
+		D3D12_RESOURCE_STATE_GENERIC_READ,
+		nullptr,
+		IID_PPV_ARGS(&buffer)
+	);
+
+	// Copy when there is assignment of initial data.
+	if (SUCCEEDED(hr) && initialData != nullptr)
+	{
+		void* mapped;
+		CD3DX12_RANGE range(0, 0);
+		hr = buffer->Map(0, &range, &mapped);
+		if (SUCCEEDED(hr))
+		{
+			memcpy(mapped, initialData, bufferSize);
+			buffer->Unmap(0, nullptr);
+		}
+	}
+
+	return buffer;
+}
+
+// ===============================================================================================
 void D3D12AppBase::CreateDepthBuffer(int width, int height)
 {
 	// Create depth buffer.

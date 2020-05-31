@@ -2,12 +2,13 @@
 
 #include "../util/D3D12AppBase.h"
 #include "../util/mathutil.h"
+#include "../dfGraphics/dfShader.h"
 
 class TriangleApp : public D3D12AppBase {
 public:
 	TriangleApp() : D3D12AppBase() {};
 
-	virtual void Prepare() override;
+	virtual void Setup() override;
 	virtual void Cleanup() override;
 	virtual void MakeCommand(ComPtr<ID3D12GraphicsCommandList>& command) override;
 
@@ -25,7 +26,8 @@ private:
 	D3D12_INDEX_BUFFER_VIEW m_indexBufferView;
 	UINT m_indexCount;
 
-	ComPtr<ID3DBlob> m_vs, m_ps;
+	dfShader m_shader;
+	//ComPtr<ID3DBlob> m_vs, m_ps;
 	ComPtr<ID3D12RootSignature> m_rootSignature;
 	ComPtr<ID3D12PipelineState> m_pipeline;
 

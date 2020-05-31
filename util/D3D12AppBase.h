@@ -24,7 +24,7 @@ public:
 	void Terminate();
 
 	virtual void Render();
-	virtual void Prepare() {}
+	virtual void Setup() {}
 	virtual void Cleanup() {}
 	virtual void MakeCommand(ComPtr<ID3D12GraphicsCommandList>& command) {}
 
@@ -40,6 +40,8 @@ protected:
 	void WaitPreviousFrame();
 	HRESULT CompileShaderFromFile(
 		const std::wstring& filename, const std::wstring& profile, ComPtr<ID3DBlob>& shaderBlob, ComPtr<ID3DBlob>& errorBlob);
+
+	ComPtr<ID3D12Resource> CreateBuffer(UINT bufferSize, const void* initialData);
 
 	ComPtr<ID3D12Device> m_device;
 	ComPtr<ID3D12CommandQueue> m_commandQueue;

@@ -183,6 +183,12 @@ void D3D12AppBase::Initialize(HWND hwnd)
 	m_commandList->Reset(m_commandAllocator, nullptr);
 
 	m_swapChain->Present(1, 0);
+
+	Setup();
+}
+
+void D3D12AppBase::Render() {
+
 }
 
 void D3D12AppBase::EnableDebugLayer() {

@@ -41,6 +41,8 @@ protected:
 	UINT m_bufferCount = 2;
 	std::vector<ID3D12Resource*> m_backBuffers;
 
+	UINT m_frameIdx;
+	
 	// For debug function.
 	void EnableDebugLayer();
 

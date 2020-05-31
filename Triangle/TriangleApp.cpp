@@ -1,7 +1,7 @@
 #include "TriangleApp.h"
 #include <stdexcept>
 
-void TriangleApp::Prepare() {
+void TriangleApp::Setup() {
 	Vertex triangleVertices[] = {
 		{ { 0.0f, 0.25f, 0.5f}, {1.0f, 0.0f, 0.0f, 1.0f}},
 		{ { 0.25f, -0.25f, 0.5f}, {0.0f, 1.0f, 0.0f, 1.0f}},
@@ -24,7 +24,7 @@ void TriangleApp::Prepare() {
 
 	// Compile shader.
 	HRESULT hr;
-	ComPtr<ID3DBlob> errBlob;
+	/*ComPtr<ID3DBlob> errBlob;
 	hr = CompileShaderFromFile(L"VertexShader.hlsl", L"vs_6_0", m_vs, errBlob);
 	if (FAILED(hr)) {
 		OutputDebugStringA((const char*)errBlob->GetBufferPointer());
@@ -33,7 +33,9 @@ void TriangleApp::Prepare() {
 	hr = CompileShaderFromFile(L"PixelShader.hlsl", L"ps_6_0", m_ps, errBlob);
 	if (FAILED(hr)) {
 		OutputDebugStringA((const char*)errBlob->GetBufferPointer());
-	}
+	}*/
+	hr = m_shader.loadShader(L"VertexShader.hlsl", L"PixelShader.hlsl");
+	Util::CheckResult(hr, "loadShader");
 
 	// Construction of root signature.
 	CD3DX12_ROOT_SIGNATURE_DESC rootSigDesc{};
@@ -43,7 +45,7 @@ void TriangleApp::Prepare() {
 		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT
 	);
 	ComPtr<ID3DBlob> signature;
-	hr = D3D12SerializeRootSignature(&rootSigDesc, D3D_ROOT_SIGNATURE_VERSION_1_0, &signature, &errBlob);
+	hr = D3D12SerializeRootSignature(&rootSigDesc, D3D_ROOT_SIGNATURE_VERSION_1_0, &signature, &m_shader.errBlob);
 	if (FAILED(hr)) {
 		throw std::runtime_error("D3D12SerializeRootSignature failed.");
 	}
@@ -67,8 +69,8 @@ void TriangleApp::Prepare() {
 	// Create pipeline state object.
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc{};
 	// Set the shader.
-	psoDesc.VS = CD3DX12_SHADER_BYTECODE(m_vs.Get());
-	psoDesc.PS = CD3DX12_SHADER_BYTECODE(m_ps.Get());
+	psoDesc.VS = CD3DX12_SHADER_BYTECODE(m_shader.vs.Get());
+	psoDesc.PS = CD3DX12_SHADER_BYTECODE(m_shader.ps.Get());
 	// Setting of blend state.
 	psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
 	// Setting of rasterizer state.
